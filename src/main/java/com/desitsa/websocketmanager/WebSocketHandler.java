@@ -2,8 +2,12 @@ package com.desitsa.websocketmanager;
 
 import org.java_websocket.handshake.ServerHandshake;
 
-public class WebSocketHandler {
+/**
+ * Se manejan todos los mensajes y eventos que llegan, de cualquier tipo
+ */
+public abstract class WebSocketHandler {
 
+    // Referencia al WebSocketManager
     private WebSocketManager wsManager;
 
     public WebSocketManager getWsManager() {

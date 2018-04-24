@@ -9,8 +9,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 
+/**
+ * Maneja la conexión con el servidor
+ */
 public class WebSocketManager {
 
     private String url;
@@ -20,24 +22,26 @@ public class WebSocketManager {
     private String connectionID;
 
     // Objeto que contiene los mensajes
-    private WebSocketHandler messages;
-
-    private ArrayList<String> in;
+    private WebSocketHandler handler;
 
 
-    public WebSocketManager(String url, Class<? extends WebSocketHandler> messages) {
+    public WebSocketManager(String url, Class<? extends WebSocketHandler> handler) {
         this.url = url;
 
         // Crea el handler de mensajes
         try {
-            this.messages = messages.newInstance();
-            this.messages.setWsManager(this);
+            this.handler = handler.newInstance();
+            this.handler.setWsManager(this);
         } catch (InstantiationException | IllegalAccessException e) {
             e.printStackTrace();
         }
 
     }
 
+
+    /**
+     * Se conecta con el servidor
+     */
     public void start() {
         URI uri = null;
         try {
@@ -51,21 +55,23 @@ public class WebSocketManager {
         // Si había una conexión, la cerramos
         close();
 
+        // Creamos la conexión con el servidor
         ws = new WebSocketClient(uri) {
             @Override
             public void onOpen(ServerHandshake serverHandshake) {
-                Platform.runLater(() -> WebSocketManager.this.messages.onOpen(serverHandshake));
+                Platform.runLater(() -> WebSocketManager.this.handler.onOpen(serverHandshake));
             }
 
             @Override
             public void onMessage(String s) {
 
-                // Objetos para manejar JSON.
+                // Objeto que crea JSONs
                 JsonParser parser = new JsonParser();
-                JsonObject jo;
 
-                // Obtiene el tipo de mensaje y el mensaje
-                jo = parser.parse(s).getAsJsonObject();
+                // Desglosa el mensaje en un objeto JSON.
+                JsonObject jo = parser.parse(s).getAsJsonObject();
+
+                // Creación del mensaje
                 Message msg = new Message();
                 msg.setMessageType(MessageType.values()[jo.get("messageType").getAsInt()]);
                 msg.setData(jo.get("data").getAsString());
@@ -75,7 +81,7 @@ public class WebSocketManager {
                     // Actúa según el tipo de mensaje
                     switch (msg.getMessageType()) {
                         case Text:
-                            WebSocketManager.this.messages.onTextMessage(msg.getData());
+                            WebSocketManager.this.handler.onTextMessage(msg.getData());
                             break;
 
                         case ClientMethodInvocation:
@@ -83,13 +89,16 @@ public class WebSocketManager {
                             String method = o.get("methodName").getAsString();
                             JsonArray arguments = o.get("arguments").getAsJsonArray();
 
+                            // Crea un array con los argumentos del método
                             String[] array = new String[arguments.size()];
                             for (int i = 0; i < arguments.size(); i++) {
                                 array[i] = arguments.get(i).getAsString();
                             }
+
+                            // Intenta invocar al método si es que existe.
                             try {
-                                Method m = WebSocketManager.this.messages.getClass().getDeclaredMethod(method, String[].class);
-                                m.invoke(messages, new Object[]{array});
+                                Method m = WebSocketManager.this.handler.getClass().getDeclaredMethod(method, String[].class);
+                                m.invoke(handler, new Object[]{array});
 
                             } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
                                 e.printStackTrace();
@@ -98,7 +107,7 @@ public class WebSocketManager {
 
                         case ConnectionEvent:
                             WebSocketManager.this.connectionID = msg.getData();
-                            WebSocketManager.this.messages.onConnected();
+                            WebSocketManager.this.handler.onConnected();
                             break;
                     }
                 });
@@ -107,23 +116,28 @@ public class WebSocketManager {
 
             @Override
             public void onClose(int i, String s, boolean b) {
-                Platform.runLater(() -> WebSocketManager.this.messages.onClose(i, s, b));
+                Platform.runLater(() -> WebSocketManager.this.handler.onClose(i, s, b));
             }
 
             @Override
             public void onError(Exception e) {
-                Platform.runLater(() -> WebSocketManager.this.messages.onError(e));
+                Platform.runLater(() -> WebSocketManager.this.handler.onError(e));
             }
         };
 
-
+        // Conectamos con el servidor
         ws.connect();
     }
 
+
+    /**
+     * Cierra la conexión actual si es que existe y no está cerrada
+     */
     public void close() {
         if (ws != null && !ws.isClosed())
            ws.close();
     }
+
 
     /**
      * Cierra la conexión actual si es que existe y vuelve a conectarla.
@@ -132,6 +146,7 @@ public class WebSocketManager {
         if (ws != null)
             ws.reconnect();
     }
+
 
     /**
      * Invoca un método del servidor
@@ -152,9 +167,11 @@ public class WebSocketManager {
             ws.send(e.toString());
     }
 
-    public WebSocketHandler getMessages() {
-        return messages;
+
+    public WebSocketHandler getHandler() {
+        return handler;
     }
+
 
     public String getConnectionID() {
         return connectionID;
