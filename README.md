@@ -1,12 +1,16 @@
 # WebSocket-Manager
 
 Compilar con:
-mvn package
+
+```mvn package```
 
 Instalar localmente en el sistema:
-mvn org.apache.maven.plugins:maven-install-plugin:2.5:install-file -Dfile="WebSocketManager-1.0.jar"
+
+```mvn org.apache.maven.plugins:maven-install-plugin:2.5:install-file -Dfile="WebSocketManager-1.0.jar"```
 
 Agregar dependencias a un proyecto
+
+```
 <!-- Websocket Manager -->
 <dependency>
     <groupId>com.desitsa</groupId>
@@ -27,3 +31,4 @@ Agregar dependencias a un proyecto
     <artifactId>gson</artifactId>
     <version>2.8.2</version>
 </dependency>
+```
