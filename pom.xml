@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.desitsa</groupId>
-    <artifactId>WebSocketManager</artifactId>
+    <artifactId>websocketmanager</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
 

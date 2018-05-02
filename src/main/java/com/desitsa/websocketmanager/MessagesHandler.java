@@ -5,16 +5,16 @@ import org.java_websocket.handshake.ServerHandshake;
 /**
  * Se manejan todos los mensajes y eventos que llegan, de cualquier tipo
  */
-public abstract class WebSocketHandler {
+public abstract class MessagesHandler {
 
-    // Referencia al WebSocketManager
-    private WebSocketManager wsManager;
+    // Referencia al Connection
+    private Connection wsManager;
 
-    public WebSocketManager getWsManager() {
+    public Connection getWsManager() {
         return wsManager;
     }
 
-    public void setWsManager(WebSocketManager wsManager) {
+    public void setWsManager(Connection wsManager) {
         this.wsManager = wsManager;
     }
 
