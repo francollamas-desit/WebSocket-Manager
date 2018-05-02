@@ -13,25 +13,25 @@ import java.net.URISyntaxException;
 /**
  * Maneja la conexión con el servidor
  */
-public class WebSocketManager {
+public class Connection {
 
     private String url;
-    private WebSocketClient ws;
+    private WebSocketClient websocket;
 
     // ID de websoket asignada por el servidor
     private String connectionID;
 
     // Objeto que contiene los mensajes
-    private WebSocketHandler handler;
+    private MessagesHandler messages;
 
 
-    public WebSocketManager(String url, Class<? extends WebSocketHandler> handler) {
+    public Connection(String url, Class<? extends MessagesHandler> messages) {
         this.url = url;
 
-        // Crea el handler de mensajes
+        // Crea el messages de mensajes
         try {
-            this.handler = handler.newInstance();
-            this.handler.setWsManager(this);
+            this.messages = messages.newInstance();
+            this.messages.setWsManager(this);
         } catch (InstantiationException | IllegalAccessException e) {
             e.printStackTrace();
         }
@@ -56,10 +56,10 @@ public class WebSocketManager {
         close();
 
         // Creamos la conexión con el servidor
-        ws = new WebSocketClient(uri) {
+        websocket = new WebSocketClient(uri) {
             @Override
             public void onOpen(ServerHandshake serverHandshake) {
-                Platform.runLater(() -> WebSocketManager.this.handler.onOpen(serverHandshake));
+                Platform.runLater(() -> Connection.this.messages.onOpen(serverHandshake));
             }
 
             @Override
@@ -81,7 +81,7 @@ public class WebSocketManager {
                     // Actúa según el tipo de mensaje
                     switch (msg.getMessageType()) {
                         case Text:
-                            WebSocketManager.this.handler.onTextMessage(msg.getData());
+                            Connection.this.messages.onTextMessage(msg.getData());
                             break;
 
                         case ClientMethodInvocation:
@@ -97,8 +97,8 @@ public class WebSocketManager {
 
                             // Intenta invocar al método si es que existe.
                             try {
-                                Method m = WebSocketManager.this.handler.getClass().getDeclaredMethod(method, String[].class);
-                                m.invoke(handler, new Object[]{array});
+                                Method m = Connection.this.messages.getClass().getDeclaredMethod(method, String[].class);
+                                m.invoke(messages, new Object[]{array});
 
                             } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
                                 e.printStackTrace();
@@ -106,8 +106,8 @@ public class WebSocketManager {
                             break;
 
                         case ConnectionEvent:
-                            WebSocketManager.this.connectionID = msg.getData();
-                            WebSocketManager.this.handler.onConnected();
+                            Connection.this.connectionID = msg.getData();
+                            Connection.this.messages.onConnected();
                             break;
                     }
                 });
@@ -116,17 +116,17 @@ public class WebSocketManager {
 
             @Override
             public void onClose(int i, String s, boolean b) {
-                Platform.runLater(() -> WebSocketManager.this.handler.onClose(i, s, b));
+                Platform.runLater(() -> Connection.this.messages.onClose(i, s, b));
             }
 
             @Override
             public void onError(Exception e) {
-                Platform.runLater(() -> WebSocketManager.this.handler.onError(e));
+                Platform.runLater(() -> Connection.this.messages.onError(e));
             }
         };
 
         // Conectamos con el servidor
-        ws.connect();
+        websocket.connect();
     }
 
 
@@ -134,8 +134,8 @@ public class WebSocketManager {
      * Cierra la conexión actual si es que existe y no está cerrada
      */
     public void close() {
-        if (ws != null && !ws.isClosed())
-           ws.close();
+        if (websocket != null && !websocket.isClosed())
+           websocket.close();
     }
 
 
@@ -143,8 +143,8 @@ public class WebSocketManager {
      * Cierra la conexión actual si es que existe y vuelve a conectarla.
      */
     public void reconnect() {
-        if (ws != null)
-            ws.reconnect();
+        if (websocket != null)
+            websocket.reconnect();
     }
 
 
@@ -163,13 +163,13 @@ public class WebSocketManager {
         Gson json = new Gson();
         JsonElement e = json.toJsonTree(invDesc);
 
-        if (ws.isOpen())
-            ws.send(e.toString());
+        if (websocket.isOpen())
+            websocket.send(e.toString());
     }
 
 
-    public WebSocketHandler getHandler() {
-        return handler;
+    public MessagesHandler getMessages() {
+        return messages;
     }
 
 
