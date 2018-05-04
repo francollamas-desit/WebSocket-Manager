@@ -71,7 +71,6 @@ public class Connection {
             @Override
             public void onMessage(String s) {
 
-
                 // Le decimos al hilo de JavaFX que ejecute las acciones.
                 Platform.runLater(() -> {
 
@@ -92,10 +91,22 @@ public class Connection {
 
                             InvocationDescriptor invDesc = gson.fromJson(msg.getData(), InvocationDescriptor.class);
 
+                            Object[] array = invDesc.getArguments();
+
+                            Object[] args = (Object[])array[0];
+                            Class[] classes = (Class[])array[1];
+
+                            /*// Creo un array con una lista de clases
+                            Class[] classes = new Class[args.length];
+                            for (int i = 0; i < classes.length; i++) {
+                                classes[i] = args[i].getClass();
+                                if (classes[i] == Integer.class) classes[i] = int.class;
+                            }*/
+
                             // Ejecuta el Método
                             try {
-                                Method m = Connection.this.messages.getClass().getDeclaredMethod(invDesc.getMethodName(), String[].class);
-                                Object result = m.invoke(messages, new Object[]{invDesc.getArguments()});
+                                Method m = Connection.this.messages.getClass().getDeclaredMethod(invDesc.getMethodName(), classes);
+                                Object result = m.invoke(messages, args);
 
                                 // Si la invocación desde servidor espera una respuesta, y mi método dio una respuesta...
                                 if (!invDesc.getIdentifier().equals(EMPTY_GUID)) {
@@ -166,7 +177,7 @@ public class Connection {
      * @param methodName nombre del método a llamar
      * @param args objetos que luego son serializados a JSON.
      */
-    public void invoke(String methodName, Object... args) {
+    public <Result> Result invoke(String methodName, Object... args) {
 
         InvocationDescriptor invDesc = new InvocationDescriptor();
         invDesc.setMethodName(methodName);
@@ -178,6 +189,8 @@ public class Connection {
         if (websocket.isOpen())
             //websocket.send(e.toString());
             System.out.println(e.toString());
+
+        return null;
     }
 
     /**
@@ -198,8 +211,8 @@ public class Connection {
         msg.setMessageType(MessageType.MethodInvocation);
         msg.setData(json.toJsonTree(invDesc).toString());
 
-        System.out.println(json.toJsonTree(msg).toString());
-
+        if (websocket.isOpen())
+            websocket.send(json.toJsonTree(msg).toString());
     }
 
 
