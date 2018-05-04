@@ -75,19 +75,8 @@ public class Connection {
                 // Le decimos al hilo de JavaFX que ejecute las acciones.
                 Platform.runLater(() -> {
 
-                    System.out.println(s);
-                    // TODO: por el momento se ignora todo tipo de dato que llega
-
-                    // Objeto que permite desglosar un JSON.
-                    JsonParser parser = new JsonParser();
-
-                    // Obtiene el JSON principal.
-                    JsonObject json = parser.parse(s).getAsJsonObject();
-
-                    // Creación del mensaje
-                    Message msg = new Message();
-                    msg.setMessageType(MessageType.values()[json.get("messageType").getAsInt()]);
-                    msg.setData(json.get("data").getAsJsonObject().get("$value").getAsString());
+                    Gson gson = new Gson();
+                    Message msg = gson.fromJson(s, Message.class);
 
                     switch (msg.getMessageType()) {
                         case ConnectionEvent:
@@ -100,25 +89,13 @@ public class Connection {
                             break;
 
                         case MethodInvocation:
-                            json = parser.parse(msg.getData()).getAsJsonObject();
 
-                            // Crea la descripción del método
-                            InvocationDescriptor invDesc = new InvocationDescriptor();
-                            invDesc.setMethodName(json.get("methodName").getAsJsonObject().get("$value").getAsString());
-                            invDesc.setIdentifier(json.get("identifier").getAsJsonObject().get("$value").getAsString());
-
-                            JsonArray arguments = json.get("arguments").getAsJsonObject().get("$values").getAsJsonArray();
-                            String[] array = new String[arguments.size()];
-                            for (int i = 0; i < arguments.size(); i++) {
-                                array[i] = arguments.get(i).getAsJsonObject().get("$value").getAsString();
-                            }
-                            invDesc.setArguments(array);
-
+                            InvocationDescriptor invDesc = gson.fromJson(msg.getData(), InvocationDescriptor.class);
 
                             // Ejecuta el Método
                             try {
                                 Method m = Connection.this.messages.getClass().getDeclaredMethod(invDesc.getMethodName(), String[].class);
-                                Object result = m.invoke(messages, new Object[]{array});
+                                Object result = m.invoke(messages, new Object[]{invDesc.getArguments()});
 
                                 // Si la invocación desde servidor espera una respuesta, y mi método dio una respuesta...
                                 if (!invDesc.getIdentifier().equals(EMPTY_GUID)) {

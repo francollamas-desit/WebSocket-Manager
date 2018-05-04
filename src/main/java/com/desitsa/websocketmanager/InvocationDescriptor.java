@@ -28,10 +28,10 @@ public class InvocationDescriptor {
     }
 
 
-    public Object[] getArguments() {
-        Object[] array = new Object[arguments.$values.length];
+    public String[] getArguments() { // TODO: este metodo tiene que castear y devolver en STRING???
+        String[] array = new String[arguments.$values.length];
         for (int i = 0; i < arguments.$values.length; i++) {
-            array[i] = arguments.$values[i].$value;
+            array[i] = (String)arguments.$values[i].$value;
         }
         return array;
     }
