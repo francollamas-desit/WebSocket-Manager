@@ -1,9 +1,8 @@
 package com.desitsa.websocketmanager;
 
-/**
- * Hace referencia a un mensaje que el cliente puede interpretar
- */
 public class Message {
+
+    private String $type;
 
     // Tipo de mensaje
     private MessageType messageType;
@@ -12,14 +11,9 @@ public class Message {
     private String data;
 
 
-    public Message() { }
-
-
-    public Message(MessageType messageType, String data) {
-        setMessageType(messageType);
-        this.data = data;
+    public Message() {
+        this.$type = "WebSocketManager.Common.Message";
     }
-
 
     public MessageType getMessageType() {
         return messageType;

@@ -1,6 +1,7 @@
 package com.desitsa.websocketmanager;
 
 import com.google.gson.*;
+import com.sun.xml.internal.ws.api.model.MEP;
 import javafx.application.Platform;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
@@ -15,7 +16,12 @@ import java.net.URISyntaxException;
  */
 public class Connection {
 
-    private String url;
+    private static final String EMPTY_GUID = "00000000-0000-0000-0000-000000000000";
+
+    // Referencia al servidor
+    private URI uri;
+
+    // WebSocket
     private WebSocketClient websocket;
 
     // ID de websoket asignada por el servidor
@@ -26,12 +32,18 @@ public class Connection {
 
 
     public Connection(String url, Class<? extends MessagesHandler> messages) {
-        this.url = url;
+
+        // Setea la URL
+        try {
+            uri = new URI(url);
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
 
         // Crea el messages de mensajes
         try {
             this.messages = messages.newInstance();
-            this.messages.setWsManager(this);
+            this.messages.setConnection(this);
         } catch (InstantiationException | IllegalAccessException e) {
             e.printStackTrace();
         }
@@ -43,13 +55,8 @@ public class Connection {
      * Se conecta con el servidor
      */
     public void start() {
-        URI uri = null;
-        try {
-            uri = new URI(url);
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-        }
 
+        // Si la URL es inválida, no se puede conectar
         if (uri == null) return;
 
         // Si había una conexión, la cerramos
@@ -65,53 +72,80 @@ public class Connection {
             @Override
             public void onMessage(String s) {
 
-                // Objeto que crea JSONs
-                JsonParser parser = new JsonParser();
-
-                // Desglosa el mensaje en un objeto JSON.
-                JsonObject jo = parser.parse(s).getAsJsonObject();
-
-                // Creación del mensaje
-                Message msg = new Message();
-                msg.setMessageType(MessageType.values()[jo.get("messageType").getAsInt()]);
-                msg.setData(jo.get("data").getAsString());
-
                 // Le decimos al hilo de JavaFX que ejecute las acciones.
                 Platform.runLater(() -> {
-                    // Actúa según el tipo de mensaje
+
+                    // TODO: por el momento se ignora todo tipo de dato que llega
+
+                    // Objeto que permite desglosar un JSON.
+                    JsonParser parser = new JsonParser();
+
+                    // Obtiene el JSON principal.
+                    JsonObject json = parser.parse(s).getAsJsonObject();
+
+                    // Creación del mensaje
+                    Message msg = new Message();
+                    msg.setMessageType(MessageType.values()[json.get("messageType").getAsInt()]);
+                    msg.setData(json.get("data").getAsJsonObject().get("$value").getAsString());
+
                     switch (msg.getMessageType()) {
+                        case ConnectionEvent:
+                            Connection.this.connectionID = msg.getData();
+                            Connection.this.messages.onConnected(Connection.this.connectionID);
+                            break;
+
                         case Text:
                             Connection.this.messages.onTextMessage(msg.getData());
                             break;
 
-                        case ClientMethodInvocation:
-                            JsonObject o = parser.parse(msg.getData()).getAsJsonObject();
-                            String method = o.get("methodName").getAsString();
-                            JsonArray arguments = o.get("arguments").getAsJsonArray();
+                        case MethodInvocation:
+                            json = parser.parse(msg.getData()).getAsJsonObject();
 
-                            // Crea un array con los argumentos del método
+                            // Crea la descripción del método
+                            InvocationDescriptor invDesc = new InvocationDescriptor();
+                            invDesc.setMethodName(json.get("methodName").getAsJsonObject().get("$value").getAsString());
+                            invDesc.setIdentifier(json.get("identifier").getAsJsonObject().get("$value").getAsString());
+
+                            JsonArray arguments = json.get("arguments").getAsJsonObject().get("$values").getAsJsonArray();
                             String[] array = new String[arguments.size()];
                             for (int i = 0; i < arguments.size(); i++) {
-                                array[i] = arguments.get(i).getAsString();
+                                array[i] = arguments.get(i).getAsJsonObject().get("$value").getAsString();
                             }
+                            invDesc.setArguments(array);
 
-                            // Intenta invocar al método si es que existe.
+
+                            // Ejecuta el Método
                             try {
-                                Method m = Connection.this.messages.getClass().getDeclaredMethod(method, String[].class);
-                                m.invoke(messages, new Object[]{array});
+                                Method m = Connection.this.messages.getClass().getDeclaredMethod(invDesc.getMethodName(), String[].class);
+                                Object result = m.invoke(messages, new Object[]{array});
+
+                                // Si la invocación desde servidor espera una respuesta, y mi método dio una respuesta...
+                                if (!invDesc.getIdentifier().equals(EMPTY_GUID)) {
+                                    if (result != null) {
+                                        // TODO: implementar (enviar respuesta)
+                                    }
+                                    else {
+                                        // TODO: enviar excepción, diciendo que el método no retorno una respuesta
+                                    }
+                                }
 
                             } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                                // Si hubo un problema al llamar al método...
                                 e.printStackTrace();
+
+                                // Le avisamos al servidor en el caso de que haya esperado una respuesta
+                                if (!invDesc.getIdentifier().equals(EMPTY_GUID)) {
+                                    // TODO: mandar excepción, diciendo que no se puede devolver un resultado.
+                                }
                             }
+
                             break;
 
-                        case ConnectionEvent:
-                            Connection.this.connectionID = msg.getData();
-                            Connection.this.messages.onConnected();
+                        case MethodReturnValue:
+                            // TODO: implementar
                             break;
                     }
                 });
-
             }
 
             @Override
@@ -158,13 +192,31 @@ public class Connection {
 
         InvocationDescriptor invDesc = new InvocationDescriptor();
         invDesc.setMethodName(methodName);
-        invDesc.setArgs(args);
+        invDesc.setArguments(args);
 
         Gson json = new Gson();
         JsonElement e = json.toJsonTree(invDesc);
 
         if (websocket.isOpen())
-            websocket.send(e.toString());
+            //websocket.send(e.toString());
+            System.out.println(e.toString());
+    }
+
+    /**
+     * Invoca un método del servidor sin esperar una respuesta
+     * @param methodName
+     * @param args
+     */
+    public void invokeOnly(String methodName, Object... args) {
+
+        InvocationDescriptor invDesc = new InvocationDescriptor();
+        invDesc.setMethodName(methodName);
+        invDesc.setArguments(args);
+        invDesc.setIdentifier(EMPTY_GUID);
+
+        Message msg = new Message();
+        msg.setMessageType(MessageType.MethodInvocation);
+
     }
 
 

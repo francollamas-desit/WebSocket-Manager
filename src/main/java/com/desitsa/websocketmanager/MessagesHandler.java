@@ -8,14 +8,15 @@ import org.java_websocket.handshake.ServerHandshake;
 public abstract class MessagesHandler {
 
     // Referencia al Connection
-    private Connection wsManager;
+    private Connection connection;
 
-    public Connection getWsManager() {
-        return wsManager;
+
+    public Connection getConnection() {
+        return connection;
     }
 
-    public void setWsManager(Connection wsManager) {
-        this.wsManager = wsManager;
+    public void setConnection(Connection connection) {
+        this.connection = connection;
     }
 
     /**
@@ -26,7 +27,7 @@ public abstract class MessagesHandler {
     /**
      * Cuando el servidor me manda el ID de mi socket.
      */
-    public void onConnected() { }
+    public void onConnected(String connectionID) { }
 
     /**
      * Recibe un texto simple
@@ -45,10 +46,10 @@ public abstract class MessagesHandler {
 
 
     public final void invoke(String methodName, Object... args) {
-        wsManager.invoke(methodName, args);
+        connection.invoke(methodName, args);
     }
 
     public final void reconnect() {
-        wsManager.reconnect();
+        connection.reconnect();
     }
 }

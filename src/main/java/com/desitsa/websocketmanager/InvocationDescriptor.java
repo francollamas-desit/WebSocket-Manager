@@ -1,8 +1,6 @@
 package com.desitsa.websocketmanager;
 
-/**
- * Hace referencia a un mensaje que el servidor puede interpretar
- */
+
 public class InvocationDescriptor {
 
     // Nombre del método
@@ -10,6 +8,10 @@ public class InvocationDescriptor {
 
     // Serie de argumentos (cualquier tipo de objetos)
     private Object[] arguments;
+
+    // Identificador del Método
+    private String identifier;
+
 
 
     public String getMethodName() {
@@ -22,12 +24,20 @@ public class InvocationDescriptor {
     }
 
 
-    public Object[] getArgs() {
+    public Object[] getArguments() {
         return arguments;
     }
 
 
-    public void setArgs(Object[] args) {
+    public void setArguments(Object[] args) {
         this.arguments = args;
+    }
+
+    public String getIdentifier() {
+        return identifier;
+    }
+
+    public void setIdentifier(String identifier) {
+        this.identifier = identifier;
     }
 }
