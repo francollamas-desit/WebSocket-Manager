@@ -22,7 +22,7 @@ public class InvocationResult {
     }
 
     public String getIdentifier() {
-        return (String)identifier.value;
+        return (String)identifier.$value;
     }
 
     public void setIdentifier(String identifier) {

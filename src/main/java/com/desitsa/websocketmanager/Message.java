@@ -5,10 +5,10 @@ public class Message {
     private String $type;
 
     // Tipo de mensaje
-    private MessageType messageType;
+    private int messageType;
 
     // Información del mensaje (en JSON)
-    private String data;
+    private JnValue data;
 
 
     public Message() {
@@ -16,21 +16,21 @@ public class Message {
     }
 
     public MessageType getMessageType() {
-        return messageType;
+        return MessageType.values()[messageType];
     }
 
 
     public void setMessageType(MessageType messageType) {
-        this.messageType = messageType;
+        this.messageType = messageType.ordinal();
     }
 
 
     public String getData() {
-        return data;
+        return (String)data.$value;
     }
 
 
     public void setData(String data) {
-        this.data = data;
+        this.data = new JnValue("System.String", data);
     }
 }

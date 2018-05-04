@@ -3,41 +3,54 @@ package com.desitsa.websocketmanager;
 
 public class InvocationDescriptor {
 
+    private String $type;
+
     // Nombre del método
-    private String methodName;
+    private JnValue methodName;
 
     // Serie de argumentos (cualquier tipo de objetos)
-    private Object[] arguments;
+    private JnValues arguments;
 
     // Identificador del Método
-    private String identifier;
+    private JnValue identifier;
 
-
+    public InvocationDescriptor() {
+        this.$type = "WebSocketManager.Common.InvocationDescriptor";
+    }
 
     public String getMethodName() {
-        return methodName;
+        return (String)methodName.$value;
     }
 
 
     public void setMethodName(String methodName) {
-        this.methodName = methodName;
+        this.methodName = new JnValue("System.String", methodName);
     }
 
 
     public Object[] getArguments() {
-        return arguments;
+        Object[] array = new Object[arguments.$values.length];
+        for (int i = 0; i < arguments.$values.length; i++) {
+            array[i] = arguments.$values[i].$value;
+        }
+        return array;
     }
 
 
     public void setArguments(Object[] args) {
-        this.arguments = args;
-    }
+        JnValue[] array = new JnValue[args.length];
+        for (int i = 0; i < args.length; i++) {
+            array[i] = new JnValue(args[i].getClass().getTypeName(), args[i]); // TODO: chequear que funcione!!!
+        }
 
+        this.arguments = new JnValues("System.Object[]", array);
+
+    }
     public String getIdentifier() {
-        return identifier;
+        return (String)identifier.$value;
     }
 
     public void setIdentifier(String identifier) {
-        this.identifier = identifier;
+        this.identifier = new JnValue("System.Guid", identifier);
     }
 }

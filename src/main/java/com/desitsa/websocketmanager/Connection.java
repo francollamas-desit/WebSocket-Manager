@@ -1,7 +1,6 @@
 package com.desitsa.websocketmanager;
 
 import com.google.gson.*;
-import com.sun.xml.internal.ws.api.model.MEP;
 import javafx.application.Platform;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
@@ -72,9 +71,11 @@ public class Connection {
             @Override
             public void onMessage(String s) {
 
+
                 // Le decimos al hilo de JavaFX que ejecute las acciones.
                 Platform.runLater(() -> {
 
+                    System.out.println(s);
                     // TODO: por el momento se ignora todo tipo de dato que llega
 
                     // Objeto que permite desglosar un JSON.
@@ -209,6 +210,8 @@ public class Connection {
      */
     public void invokeOnly(String methodName, Object... args) {
 
+        Gson json = new Gson();
+
         InvocationDescriptor invDesc = new InvocationDescriptor();
         invDesc.setMethodName(methodName);
         invDesc.setArguments(args);
@@ -216,6 +219,9 @@ public class Connection {
 
         Message msg = new Message();
         msg.setMessageType(MessageType.MethodInvocation);
+        msg.setData(json.toJsonTree(invDesc).toString());
+
+        System.out.println(json.toJsonTree(msg).toString());
 
     }
 

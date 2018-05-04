@@ -185,5 +185,7 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
+*Main.java
+*MSG.java
 
 # End of https://www.gitignore.io/api/osx,java,maven,eclipse,netbeans,intellij

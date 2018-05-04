@@ -2,12 +2,12 @@ package com.desitsa.websocketmanager;
 
 public class JnValues {
 
-    public JnValues(String $type, Object values) {
+    public JnValues(String $type, JnValue[] $values) {
         this.$type = $type;
-        this.values = values;
+        this.$values = $values;
     }
 
     public String $type;
 
-    public Object values;
+    public JnValue[] $values;
 }
