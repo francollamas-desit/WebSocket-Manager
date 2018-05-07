@@ -49,7 +49,8 @@ public abstract class MessagesHandler {
         return connection.invoke(methodName, args);
     }
 
-    public final void reconnect() {
-        connection.reconnect();
+    public final void invokeOnly(String methodName, Object... args) {
+        connection.invokeOnly(methodName, args);
     }
+
 }

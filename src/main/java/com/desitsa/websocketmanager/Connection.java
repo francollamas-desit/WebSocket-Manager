@@ -107,7 +107,6 @@ public class Connection {
 
                                 // Si la invocación desde servidor espera una respuesta, y mi método dio una respuesta...
                                 if (!invDesc.getIdentifier().equals(EMPTY_GUID)) {
-                                    System.out.println(invDesc.getIdentifier().toString());
                                     InvocationResult invRes = new InvocationResult();
                                     invRes.setIdentifier(invDesc.getIdentifier());
 
@@ -186,10 +185,6 @@ public class Connection {
     }
 
 
-    public Result invoke(String methodName) {
-        return invoke(methodName, new Object[0]);
-    }
-
     /**
      * Invoca un método del servidor esperando una respuesta
      *
@@ -221,9 +216,6 @@ public class Connection {
         return result;
     }
 
-    public void invokeOnly(String methodName) {
-        invokeOnly(methodName, new Object[0]);
-    }
 
     /**
      * Invoca un método del servidor sin esperar una respuesta
