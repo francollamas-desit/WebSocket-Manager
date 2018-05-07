@@ -45,8 +45,8 @@ public abstract class MessagesHandler {
     public void onError(Exception e) { }
 
 
-    public final void invoke(String methodName, Object... args) {
-        connection.invoke(methodName, args);
+    public final Result invoke(String methodName, Object... args) {
+        return connection.invoke(methodName, args);
     }
 
     public final void reconnect() {

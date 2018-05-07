@@ -9,6 +9,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.UUID;
 
 /**
  * Maneja la conexión con el servidor
@@ -29,6 +31,7 @@ public class Connection {
     // Objeto que contiene los mensajes
     private MessagesHandler messages;
 
+    private HashMap<String, Result> waitingResult;
 
     public Connection(String url, Class<? extends MessagesHandler> messages) {
 
@@ -47,6 +50,7 @@ public class Connection {
             e.printStackTrace();
         }
 
+        waitingResult = new HashMap<>();
     }
 
 
@@ -103,7 +107,7 @@ public class Connection {
 
                                 // Si la invocación desde servidor espera una respuesta, y mi método dio una respuesta...
                                 if (!invDesc.getIdentifier().equals(EMPTY_GUID)) {
-
+                                    System.out.println(invDesc.getIdentifier().toString());
                                     InvocationResult invRes = new InvocationResult();
                                     invRes.setIdentifier(invDesc.getIdentifier());
 
@@ -116,9 +120,7 @@ public class Connection {
                                     msgResult.setMessageType(MessageType.MethodReturnValue);
                                     msgResult.setData(json.toJsonTree(invRes).toString());
 
-                                    System.out.println(json.toJsonTree(msgResult).toString());
                                     websocket.send(json.toJsonTree(msgResult).toString());
-
                                 }
 
                             } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
@@ -142,8 +144,18 @@ public class Connection {
                             break;
 
                         case MethodReturnValue:
-                            System.out.println("///// FALTA IMPLEMENTAR ////// >>>> quiso retornar valor al servidor");
-                            // TODO: implementar
+                            InvocationResult invRes = json.fromJson(msg.getData(), InvocationResult.class);
+                            Object[] result = invRes.getResult();
+
+
+                            Object resultValue = result[0];
+                            Class resultType = (Class)result[1];
+                            String exception = invRes.getException();
+
+                            Result res = waitingResult.get(invRes.getIdentifier());
+                            res.getResultListener().onResult(resultValue, exception);
+                            waitingResult.remove(invRes.getIdentifier());
+
                             break;
                     }
                 });
@@ -183,26 +195,43 @@ public class Connection {
     }
 
 
+    public Result invoke(String methodName) {
+        return invoke(methodName, new Object[0]);
+    }
+
     /**
-     * Invoca un método del servidor
+     * Invoca un método del servidor esperando una respuesta
      *
      * @param methodName nombre del método a llamar
      * @param args objetos que luego son serializados a JSON.
+     * @return Un objeto result, para agregarle comportamiento según un resultado o error
      */
-    public <Result> Result invoke(String methodName, Object... args) {
+    public Result invoke(String methodName, Object... args) {
+
+        Gson json = new Gson();
 
         InvocationDescriptor invDesc = new InvocationDescriptor();
         invDesc.setMethodName(methodName);
         invDesc.setArguments(args);
+        invDesc.setIdentifier(UUID.randomUUID().toString());
 
-        Gson json = new Gson();
-        JsonElement e = json.toJsonTree(invDesc);
+        Message msg = new Message();
+        msg.setMessageType(MessageType.MethodInvocation);
+        msg.setData(json.toJsonTree(invDesc).toString());
+
+        Result result = new Result();
+
+        // setear la guid en la lista
+        waitingResult.put(invDesc.getIdentifier(), result);
 
         if (websocket.isOpen())
-            //websocket.send(e.toString());
-            System.out.println(e.toString());
+            websocket.send(json.toJsonTree(msg).toString());
 
-        return null;
+        return result;
+    }
+
+    public void invokeOnly(String methodName) {
+        invokeOnly(methodName, new Object[0]);
     }
 
     /**

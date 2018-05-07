@@ -25,8 +25,10 @@ public class InvocationResult {
         this.identifier = new JnValue("System.Guid", identifier);
     }
 
-    public Object getResult() {
-        return Util.convertToJavaType(result.$type, result.$value);
+    public Object[] getResult() {
+        if (result != null)
+            return Util.convertToJavaType(result.$type, result.$value);
+        return null;
     }
 
     public void setResult(Object result) {
@@ -34,7 +36,9 @@ public class InvocationResult {
     }
 
     public String getException() {
-        return (String)exception.message;
+        if (exception != null)
+            return (String)exception.message;
+        return null;
     }
 
     public void setException(String message) {
