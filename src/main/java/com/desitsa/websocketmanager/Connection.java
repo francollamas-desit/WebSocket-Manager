@@ -186,15 +186,6 @@ public class Connection {
     }
 
 
-    /**
-     * Cierra la conexión actual si es que existe y vuelve a conectarla.
-     */
-    public void reconnect() {
-        if (websocket != null)
-            websocket.reconnect();
-    }
-
-
     public Result invoke(String methodName) {
         return invoke(methodName, new Object[0]);
     }
