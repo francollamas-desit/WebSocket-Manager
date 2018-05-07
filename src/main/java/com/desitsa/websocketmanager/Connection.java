@@ -74,8 +74,8 @@ public class Connection {
                 // Le decimos al hilo de JavaFX que ejecute las acciones.
                 Platform.runLater(() -> {
 
-                    Gson gson = new Gson();
-                    Message msg = gson.fromJson(s, Message.class);
+                    Gson json = new Gson();
+                    Message msg = json.fromJson(s, Message.class);
 
                     switch (msg.getMessageType()) {
                         case ConnectionEvent:
@@ -89,19 +89,12 @@ public class Connection {
 
                         case MethodInvocation:
 
-                            InvocationDescriptor invDesc = gson.fromJson(msg.getData(), InvocationDescriptor.class);
+                            InvocationDescriptor invDesc = json.fromJson(msg.getData(), InvocationDescriptor.class);
 
                             Object[] array = invDesc.getArguments();
 
                             Object[] args = (Object[])array[0];
                             Class[] classes = (Class[])array[1];
-
-                            /*// Creo un array con una lista de clases
-                            Class[] classes = new Class[args.length];
-                            for (int i = 0; i < classes.length; i++) {
-                                classes[i] = args[i].getClass();
-                                if (classes[i] == Integer.class) classes[i] = int.class;
-                            }*/
 
                             // Ejecuta el Método
                             try {
@@ -110,27 +103,46 @@ public class Connection {
 
                                 // Si la invocación desde servidor espera una respuesta, y mi método dio una respuesta...
                                 if (!invDesc.getIdentifier().equals(EMPTY_GUID)) {
-                                    if (result != null) {
-                                        // TODO: implementar (enviar respuesta)
-                                    }
-                                    else {
-                                        // TODO: enviar excepción, diciendo que el método no retorno una respuesta
-                                    }
+
+                                    InvocationResult invRes = new InvocationResult();
+                                    invRes.setIdentifier(invDesc.getIdentifier());
+
+                                    if (result != null)
+                                        invRes.setResult(result);
+                                    else
+                                        invRes.setException("El método del cliente no tiene retorno o devolvió 'null'");
+
+                                    Message msgResult = new Message();
+                                    msgResult.setMessageType(MessageType.MethodReturnValue);
+                                    msgResult.setData(json.toJsonTree(invRes).toString());
+
+                                    System.out.println(json.toJsonTree(msgResult).toString());
+                                    websocket.send(json.toJsonTree(msgResult).toString());
+
                                 }
 
                             } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                                // Si hubo un problema al llamar al método...
+                                // Si hubo un problema al llamar al método... mostramos la excepción
                                 e.printStackTrace();
 
                                 // Le avisamos al servidor en el caso de que haya esperado una respuesta
                                 if (!invDesc.getIdentifier().equals(EMPTY_GUID)) {
-                                    // TODO: mandar excepción, diciendo que no se puede devolver un resultado.
+                                    InvocationResult invRes = new InvocationResult();
+                                    invRes.setIdentifier(invDesc.getIdentifier());
+                                    invRes.setException("El método del cliente no existe o no está correctamente definido");
+
+                                    Message msgResult = new Message();
+                                    msgResult.setMessageType(MessageType.MethodReturnValue);
+                                    msgResult.setData(json.toJsonTree(invRes).toString());
+
+                                    websocket.send(json.toJsonTree(msgResult).toString());
                                 }
                             }
 
                             break;
 
                         case MethodReturnValue:
+                            System.out.println("///// FALTA IMPLEMENTAR ////// >>>> quiso retornar valor al servidor");
                             // TODO: implementar
                             break;
                     }

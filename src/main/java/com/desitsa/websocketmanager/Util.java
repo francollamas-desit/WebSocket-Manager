@@ -1,8 +1,6 @@
 package com.desitsa.websocketmanager;
 
-import java.util.UUID;
-
-public class Util {
+ public class Util {
 
     /**
      * Obtiene el tipo de dato de C# según una clase de Java
@@ -26,20 +24,52 @@ public class Util {
 
     /**
      * Obtiene el tipo de dato de Java a partir de un tipo de C#
+     * @return el valor casteado y su tipo correspondiente
      */
-    public static Class getJavaClass(String cSharpType) {
+    public static Object[] convertToJavaType(String cSharpType, Object obj) {
+
+        Object[] array = new Object[2];
+
+        // En números se hace el casteo correspondiente al valor, porque por defecto a cualquier número llega como Double
+
         switch (cSharpType) {
-            case "System.Guid":     return UUID.class;
-            case "System.Boolean":  return boolean.class;
-            case "System.Byte":     return byte.class;
-            case "System.Int16":    return short.class;
-            case "System.Int32":    return int.class;
-            case "System.Int64":    return long.class;
-            case "System.String":   return String.class;
-            case "System.Char":     return char.class;
-            case "System.Single":   return float.class;
-            case "System.Double":   return double.class;
-            default:                return Object.class;
+            case "System.String":
+                array[1] = String.class;
+                break;
+            case "System.Boolean":
+                array[1] = boolean.class;
+                break;
+            case "System.Byte":
+                array[0] = ((Double)obj).byteValue();
+                array[1] = byte.class;
+                break;
+            case "System.Int16":
+                array[0] = ((Double)obj).shortValue();
+                array[1] = short.class;
+                break;
+            case "System.Int32":
+                array[0] = ((Double)obj).intValue();
+                array[1] = int.class;
+                break;
+            case "System.Int64":
+                array[0] = ((Double)obj).longValue();
+                array[1] = long.class;
+                break;
+            case "System.Single":
+                array[0] = ((Double)obj).floatValue();
+                array[1] = float.class;
+                break;
+            case "System.Double":
+                array[1] = double.class;
+                break;
+            default:
+                array[1] = Object.class;
+                break;
         }
+
+        // Si no se casteó.. por defecto se asigna sin castear a nada.
+        if (array[0] == null) array[0] = obj;
+
+        return array;
     }
 }

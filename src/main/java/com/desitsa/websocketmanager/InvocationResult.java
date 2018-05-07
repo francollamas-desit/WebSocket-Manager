@@ -4,21 +4,17 @@ public class InvocationResult {
 
     private String $type;
 
-    // Identificador del método
-    private JnValue identifier;
-
+    private JnValue result;
     // Resultado del método
-    private Object result; // TODO: dejarlo en Object???
 
     // Excepción por algun motivo
     private JnException exception;
 
+    // Identificador del método
+    private JnValue identifier;
+
     public InvocationResult() {
         this.$type = "WebSocketManager.Common.InvocationResult";
-    }
-
-    public String get$type() {
-        return $type;
     }
 
     public String getIdentifier() {
@@ -30,11 +26,11 @@ public class InvocationResult {
     }
 
     public Object getResult() {
-        return result;
+        return Util.convertToJavaType(result.$type, result.$value);
     }
 
     public void setResult(Object result) {
-        this.result = result;
+        this.result = new JnValue(Util.getCSharpType(result.getClass()), result);
     }
 
     public String getException() {

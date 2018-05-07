@@ -1,6 +1,8 @@
 package com.desitsa.websocketmanager;
 
-
+/**
+ * Representa a una invocación de un método
+ */
 public class InvocationDescriptor {
 
     private String $type;
@@ -34,6 +36,7 @@ public class InvocationDescriptor {
      */
     public Object[] getArguments() {
 
+        // array de {Argumentos, Tipos}
         Object[] array = new Object[2];
 
         Object[] argsValue = new Object[arguments.$values.length];
@@ -43,52 +46,15 @@ public class InvocationDescriptor {
         array[1] = argsType;
 
         for (int i = 0; i < arguments.$values.length; i++) {
-
-            Object v = arguments.$values[i].$value;
-            switch (arguments.$values[i].$type) {
-                case "System.String":
-                    argsType[i] = String.class;
-                    break;
-                case "System.Boolean":
-                    argsType[i] = boolean.class;
-                    break;
-                case "System.Byte":
-                    argsValue[i] = ((Double)v).byteValue();
-                    argsType[i] = byte.class;
-                    break;
-                case "System.Int16":
-                    argsValue[i] = ((Double)v).shortValue();
-                    argsType[i] = short.class;
-                    break;
-                case "System.Int32":
-                    argsValue[i] = ((Double)v).intValue();
-                    argsType[i] = int.class;
-                    break;
-                case "System.Int64":
-                    argsValue[i] = ((Double)v).longValue();
-                    argsType[i] = long.class;
-                    break;
-                case "System.Single":
-                    argsValue[i] = ((Double)v).floatValue();
-                    argsType[i] = float.class;
-                    break;
-                case "System.Double":
-                    argsType[i] = double.class;
-                    break;
-                default:
-                    argsType[i] = Object.class;
-                    break;
-            }
-
-            // Si no se casteó.. por defecto se asigna sin castear a nada.
-            if (argsValue[i] == null) argsValue[i] = v;
+            Object[] res = Util.convertToJavaType(arguments.$values[i].$type, arguments.$values[i].$value);
+            argsValue[i] = res[0];
+            argsType[i] = (Class) res[1];
         }
         return array;
     }
 
     /**
-     *
-     * @param args
+     * Setea los argumentos
      */
     public void setArguments(Object[] args) {
         JnValue[] array = new JnValue[args.length];
