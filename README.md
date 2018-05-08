@@ -1,8 +1,10 @@
-# WebSocket-Manager
+# WebSocket Manager
 
 Compilar con:
 
-```mvn package```
+```bash
+mvn package
+```
 
 Instalar localmente en el sistema:
 
