@@ -146,9 +146,17 @@ public class Connection {
                             InvocationResult invRes = json.fromJson(msg.getData(), InvocationResult.class);
                             Object[] result = invRes.getResult();
 
+                            Object resultValue;
+                            Object resultType; // TODO: darle un uso al tipo
 
-                            Object resultValue = result[0];
-                            Class resultType = (Class)result[1];
+                            if (result != null) {
+                                resultValue = result[0];
+                                resultType = (Class)result[1];
+                            }
+                            else {
+                                resultValue = null;
+                                resultType = null;
+                            }
                             String exception = invRes.getException();
 
                             Result res = waitingResult.get(invRes.getIdentifier());
