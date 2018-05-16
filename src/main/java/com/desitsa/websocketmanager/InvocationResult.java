@@ -35,9 +35,9 @@ public class InvocationResult {
         this.result = new JnValue(Util.getCSharpType(result.getClass()), result);
     }
 
-    public String getException() {
+    public Object getException() {
         if (exception != null)
-            return (String)exception.message;
+            return exception.message;
         return null;
     }
 

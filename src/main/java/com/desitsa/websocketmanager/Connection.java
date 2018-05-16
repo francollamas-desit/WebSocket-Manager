@@ -157,7 +157,7 @@ public class Connection {
                                 resultValue = null;
                                 resultType = null;
                             }
-                            String exception = invRes.getException();
+                            Object exception = invRes.getException();
 
                             Result res = waitingResult.get(invRes.getIdentifier());
                             res.getResultListener().onResult(resultValue, exception);
