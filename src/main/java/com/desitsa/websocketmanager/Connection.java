@@ -33,7 +33,16 @@ public class Connection {
 
     private HashMap<String, Result> waitingResult;
 
+    private boolean logsEnabled;
+
+
     public Connection(String url, Class<? extends MessagesHandler> messages) {
+        this(url, messages, false);
+    }
+
+    public Connection(String url, Class<? extends MessagesHandler> messages, boolean logsEnabled) {
+
+        this.logsEnabled = logsEnabled;
 
         // Setea la URL
         try {
@@ -80,6 +89,8 @@ public class Connection {
 
                     Gson json = new Gson();
                     Message msg = json.fromJson(s, Message.class);
+
+                    if (logsEnabled) System.out.println("[WS LOG] " + s);
 
                     switch (msg.getMessageType()) {
                         case ConnectionEvent:

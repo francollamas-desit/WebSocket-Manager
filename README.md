@@ -9,7 +9,7 @@ mvn package
 Instalar localmente en el sistema:
 
 ```bash
-mvn org.apache.maven.plugins:maven-install-plugin:2.5:install-file -Dfile="WebSocketManager-1.1.2.jar"
+mvn org.apache.maven.plugins:maven-install-plugin:2.5:install-file -Dfile="WebSocketManager-1.1.3.jar"
 ```
 
 Agregar dependencias a un proyecto
@@ -19,7 +19,7 @@ Agregar dependencias a un proyecto
 <dependency>
     <groupId>com.desitsa</groupId>
     <artifactId>websocketmanager</artifactId>
-    <version>1.1.2</version>
+    <version>1.1.3</version>
 </dependency>
 
 <!-- WebSockets -->
