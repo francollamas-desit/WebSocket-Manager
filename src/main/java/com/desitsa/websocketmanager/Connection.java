@@ -5,10 +5,17 @@ import javafx.application.Platform;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManagerFactory;
+import java.io.File;
+import java.io.FileInputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.KeyStore;
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -190,8 +197,44 @@ public class Connection {
             }
         };
 
+        // Agregado: soporte a WSS (TODO: hacerlo configurable)
+
+        String STORETYPE = "JKS";
+        String KEYSTORE = "keystore.jks";
+        String STOREPASSWORD = "spifmgr.dll";
+        String KEYPASSWORD = "kpifmgr.dll";
+
+        try {
+            /*KeyStore ks = KeyStore.getInstance( STORETYPE );
+            File kf = new File("C:\\keystore.jks");
+            ks.load( new FileInputStream( kf ), STOREPASSWORD.toCharArray() );
+
+            KeyManagerFactory kmf = KeyManagerFactory.getInstance( "SunX509" );
+            kmf.init( ks, KEYPASSWORD.toCharArray() );
+            TrustManagerFactory tmf = TrustManagerFactory.getInstance( "SunX509" );
+            tmf.init( ks );*/
+
+            SSLContext sslContext = SSLContext.getInstance( "TLS" );
+            //sslContext.init( kmf.getKeyManagers(), tmf.getTrustManagers(), null );
+             sslContext.init( null, null, null ); // will use java's default key and trust store which is sufficient unless you deal with self-signed certificates
+
+
+            SSLSocketFactory factory = sslContext.getSocketFactory();// (SSLSocketFactory) SSLSocketFactory.getDefault();
+
+            websocket.setSocket( factory.createSocket() );
+
+
+            websocket.connectBlocking();
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+
+
+
         // Conectamos con el servidor
-        websocket.connect();
+        //websocket.connect();
     }
 
 
