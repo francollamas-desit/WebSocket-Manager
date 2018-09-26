@@ -199,42 +199,32 @@ public class Connection {
 
         // Agregado: soporte a WSS (TODO: hacerlo configurable)
 
-        String STORETYPE = "JKS";
-        String KEYSTORE = "keystore.jks";
-        String STOREPASSWORD = "spifmgr.dll";
-        String KEYPASSWORD = "kpifmgr.dll";
 
-        try {
-            /*KeyStore ks = KeyStore.getInstance( STORETYPE );
-            File kf = new File("C:\\keystore.jks");
-            ks.load( new FileInputStream( kf ), STOREPASSWORD.toCharArray() );
-
-            KeyManagerFactory kmf = KeyManagerFactory.getInstance( "SunX509" );
-            kmf.init( ks, KEYPASSWORD.toCharArray() );
-            TrustManagerFactory tmf = TrustManagerFactory.getInstance( "SunX509" );
-            tmf.init( ks );*/
-
-            SSLContext sslContext = SSLContext.getInstance( "TLS" );
-            //sslContext.init( kmf.getKeyManagers(), tmf.getTrustManagers(), null );
-             sslContext.init( null, null, null ); // will use java's default key and trust store which is sufficient unless you deal with self-signed certificates
+        /*if (uri.getScheme().equals("wss")) {
+            try {
+                SSLContext sslContext = SSLContext.getInstance( "TLS" );
+                //sslContext.init( kmf.getKeyManagers(), tmf.getTrustManagers(), null );
+                sslContext.init( null, null, null ); // will use java's default key and trust store which is sufficient unless you deal with self-signed certificates
 
 
-            SSLSocketFactory factory = sslContext.getSocketFactory();// (SSLSocketFactory) SSLSocketFactory.getDefault();
+                SSLSocketFactory factory = sslContext.getSocketFactory();// (SSLSocketFactory) SSLSocketFactory.getDefault();
 
-            websocket.setSocket( factory.createSocket() );
+                websocket.setSocket( factory.createSocket() );
 
-
-            websocket.connectBlocking();
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
+                websocket.connectBlocking();
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
 
-
+        else {
+            websocket.connect();
+        }*/
 
 
         // Conectamos con el servidor
-        //websocket.connect();
+        websocket.connect();
     }
 
 
